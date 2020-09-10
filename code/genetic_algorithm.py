@@ -11,18 +11,19 @@ class Individual:
         self.fitness = fitnessFunction(self)
         
     def repair(self):
-        if self.fitness == 0:
-            #children = []
-            children = [Tree("",[]) for x in range(min_tree_degree)]
+        while self.fitness == 0:
+            children = []
+            #children = copy.deepcopy(random.choice(population).code.children)
             self.code = Tree("",children)
-        
+            self.fitness = fitnessFunction(self)
+            
     def __lt__(self, other):
          return self.fitness < other.fitness
         
 def fitnessFunction(individual):
-    individual_depth, individual_degree = individual.code.get_depth_and_degree()
-    if individual.code.size > min_tree.size or individual_depth > min_tree_depth or individual_degree > min_tree_degree:
-        return 0
+    #individual_depth, individual_degree = individual.code.get_depth_and_degree()
+    #if individual.code.size > min_tree.size or individual_depth > min_tree_depth or individual_degree > min_tree_degree:
+    #    return 0
     for tree in collection:
         if not is_subtree(individual.code, tree):
             return 0
@@ -61,6 +62,7 @@ def crossover(parent1, parent2, child1, child2):
     for node in nodes2:
         sum2 += len(node.children)
         
+
     if sum1 == 0:
         node1 = parent1.code
     else:
@@ -70,11 +72,11 @@ def crossover(parent1, parent2, child1, child2):
         node2 = parent2.code
     else:
         node2 = np.random.choice(nodes2,p=[len(node.children)/sum2 for node in nodes2])
+
     '''
     node1 = np.random.choice(nodes1)
     node2 = np.random.choice(nodes2)
     '''
-
     node1 = copy.deepcopy(node1)
     node2 = copy.deepcopy(node2)
     
@@ -84,26 +86,25 @@ def crossover(parent1, parent2, child1, child2):
 def mutation(individual):
     all_nodes = individual.code.get_all_nodes()
     node = random.choice(all_nodes)
-    if random.random() > 0.1:
+    if random.random() > 0.01:
         return 
     if individual.code.parent != None:
         individual.code.parent.delete_child(individual.code)
-
 
 def population_init(size):
     population = []
     degree = 0
     for i in range(size):
-        #population.append(Individual(Tree("", [Tree("",[]) for x in range(degree)])))
-        population.append(Individual(Tree("", [])))
+        population.append(Individual(Tree("", [Tree("",[]) for x in range(degree)])))
+        #population.append(Individual(Tree("", [])))
         degree = (degree + 1) % (min_tree_degree+1)
     return population, population    
     
 def set_parameters():
-    population_size = 100
-    elite_size = 10
-    iteration_range = 200
-    tournament_size = 5
+    population_size = 80
+    elite_size = 6
+    iteration_range = 500
+    tournament_size = 4
     return population_size, elite_size, iteration_range,tournament_size
 
 def max_common_subtree(coll):
@@ -113,10 +114,11 @@ def max_common_subtree(coll):
     min_tree = min(collection, key = lambda x: x.size)
     global min_tree_depth, min_tree_degree
     min_tree_depth, min_tree_degree =  min_tree.get_depth_and_degree()
-    
+    global population
+
     population_size, elite_size, iteration_range, tournament_size  = set_parameters()
     population,newPopulation = population_init(population_size)
-    
+
     best_individual = None
     best_individual_repeat = 0
     
@@ -127,8 +129,7 @@ def max_common_subtree(coll):
             best_individual_repeat += 1 
         else:
             best_individual_repeat = 0
-        if best_individual_repeat > 20:
-            print("Iteration:" + str(iteration))
+        if best_individual_repeat > 30:
             return best_individual.code
         
         for i in range(elite_size):
@@ -136,6 +137,8 @@ def max_common_subtree(coll):
         for i in range(elite_size, population_size, 2):
             k1 = roulette_selection(population)
             k2 = roulette_selection(population)
+            #k1 = tournament_selection(population,tournament_size)
+            #k2 = tournament_selection(population,tournament_size)
             crossover(population[k1], population[k2], newPopulation[i], newPopulation[i + 1])
             mutation(newPopulation[i])
             mutation(newPopulation[i+1])
@@ -145,7 +148,7 @@ def max_common_subtree(coll):
             newPopulation[i+1].repair()
         population = newPopulation
         best_individual = population[0]
-        
-    print("Iteration:" + str(iteration))
+
+
     population.sort(key = lambda x: x.fitness, reverse=True)
     return population[0].code

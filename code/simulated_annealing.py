@@ -12,7 +12,7 @@ def fitness_function(s,collection):
             return 0
     return s.size
 
-def choose_new_solution(solution):
+def choose_new_solution(solution,p):
     solution = copy.deepcopy(solution)
 
     all_nodes = solution.get_all_nodes()
@@ -20,7 +20,7 @@ def choose_new_solution(solution):
 
     operation = random.randrange(3)    
     if operation == 0:
-        if node.parent == None:
+        if node.parent == None or random.random() > p:
             operation = 1
         else:
             node.parent.delete_child(node)
@@ -33,21 +33,21 @@ def choose_new_solution(solution):
     return solution
 
 def max_common_subtree(collection):
-    max_iter = 100
+    max_iter = 500
 
     solution = create_solution()
     solution_fitness = fitness_function(solution,collection)
     best_fitness_ever = solution_fitness
     best_solution = solution
 
-    for i in range(max_iter):       
-        candidat = choose_new_solution(solution)
+    for i in range(1,max_iter):       
+        p = math.log(2)/math.log(1+i)
+        candidat = choose_new_solution(solution,p)
         candidat_fitness = fitness_function(candidat,collection)
         if candidat_fitness > solution_fitness:
             solution = candidat
             solution_fitness = candidat_fitness
         else:
-            p = math.log(2)/math.log(1+i)
             q = random.random()
             if p > q and candidat_fitness != 0:
                 solution = candidat

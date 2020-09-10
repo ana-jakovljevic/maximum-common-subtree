@@ -34,9 +34,7 @@ def greedy_partition(tree,bottom,top):
 
 
 
-def partition_nodes(partition, partitions, distance, current_distance):
-    # da li skup particija sadrzi ulaznu particiju ???
-    
+def partition_nodes(partition, partitions, distance, current_distance):    
     if partition in partitions and current_distance != 0:
         return []
     
@@ -79,7 +77,7 @@ def max_common_subtree(collection,k):
 
     partitions, _ = greedy_partition(minimal_tree,bottom,top)
     groups = create_groups(partitions,distance,top)
-    
+
     max_subtree = None
     for group in groups:
         combinations = powerset(group, math.ceil(m/3))
